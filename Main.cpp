@@ -10,6 +10,10 @@
 //other libs
 #include <SOIL/SOIL.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 // Other includes
 #include "Shader.h"
 
@@ -94,22 +98,40 @@ int main()
 
 	glBindVertexArray(0); // Unbind VAO
 
-	//texture with soil
-	GLuint texture;
-	glGenTextures(1, &texture);  
-	glBindTexture(GL_TEXTURE_2D, texture);
+	//textures with soil
+	GLuint mirrorTex;
+	glGenTextures(1, &mirrorTex);  
+	glBindTexture(GL_TEXTURE_2D, mirrorTex);
 
 	// Set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	int width, height;
-	unsigned char* image = SOIL_load_image("textures/ref.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("textures/sky.jpg", &width, &height, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	SOIL_free_image_data(image);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	//-------//
+
+	GLuint refractionTex;
+	glGenTextures(1, &refractionTex);
+	glBindTexture(GL_TEXTURE_2D, refractionTex);
+
+	// Set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	image = SOIL_load_image("textures/bottom.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	SOIL_free_image_data(image);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// ------- //
 
 
 	// rendering loop
@@ -123,13 +145,26 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//pass uniforms to shader
-		//glUniform1f(glGetUniformLocation(waterShader.Program, "xOffset"), offset);
-		
-		//bind texture
-		glBindTexture(GL_TEXTURE_2D, texture);
 
+		//bind textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, mirrorTex);
+		glUniform1i(glGetUniformLocation(waterShader.Program, "mirrorTex"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, refractionTex);
+		glUniform1i(glGetUniformLocation(waterShader.Program, "refractionTex"), 1);
+		
+		//ativate shader
 		waterShader.Use();
+
+		//make transformation matrix
+		glm::mat4 transMat;
+		//transMat = glm::translate(transMat, glm::vec3(1.0f, 1.0f, 0.0f));
+		transMat = glm::rotate(transMat, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
+		transMat = glm::rotate(transMat, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+
+		GLuint transformLoc = glGetUniformLocation(waterShader.Program, "transformMat");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));
 
 		// Draw the water
 		glBindVertexArray(VAO);

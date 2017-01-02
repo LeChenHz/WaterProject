@@ -3,9 +3,11 @@ in vec3 ourColor;
 in vec2 ourTexCoord;
 
 out vec4 color;
-uniform sampler2D ourTexture;
+uniform sampler2D mirrorTex;
+uniform sampler2D refractionTex;
 
 void main()
 {
-    color = texture(ourTexture, ourTexCoord);
+	color = mix(texture(mirrorTex, ourTexCoord), texture(refractionTex, ourTexCoord), 0.2);
+
 }
