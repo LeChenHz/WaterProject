@@ -101,8 +101,10 @@ int main()
 	Shader lampShader("lampshader.vertex", "lampshader.fragment");
 
 	// load textures
-	GLuint normalMap = loadTexture("textures/normalmap.jpg");
+	GLuint normalMap = loadTexture("textures/normalmap2.png");
 	glUniform1i(glGetUniformLocation(lightShader.Program, "normalMap"), 0);
+	GLuint dudvMap = loadTexture("textures/dudv.png");
+	glUniform1i(glGetUniformLocation(lightShader.Program, "dudvMap"), 1);
 
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
@@ -257,7 +259,8 @@ int main()
 
 	// ------- //
 	*/
-
+	float waveFactor = 0.0f;
+	const float WAVE_SPEED = 0.03f;
 
 
 	// rendering loop
@@ -278,10 +281,13 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//animate light
-		//lightPos.x = sin(glfwGetTime()) * 0.5f ;
-		//lightPos.z = cos(glfwGetTime()) * 0.5f;
+		lightPos.x = sin(glfwGetTime()) * 0.5f ;
+		lightPos.z = cos(glfwGetTime()) * 0.5f;
 		//lightPos.y = 1.0f + sin(glfwGetTime()/2);
 
+		waveFactor += WAVE_SPEED * deltaTime;
+		if (waveFactor >= 1.0)
+			waveFactor = 0.0f;
 
 		//bind textures
 		/*glActiveTexture(GL_TEXTURE0);
@@ -304,9 +310,13 @@ int main()
 
 		GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
 		GLint viewPosLoc = glGetUniformLocation(lightShader.Program, "viewPos");
+		
+		GLint moveFactorLoc = glGetUniformLocation(lightShader.Program, "moveFactor");
 		glUniform1i(glGetUniformLocation(lightShader.Program, "normalMapping"), normalMapping);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, normalMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, dudvMap);
 
 		GLint matAmbientLoc = glGetUniformLocation(lightShader.Program, "material.ambient");
 		GLint matDiffuseLoc = glGetUniformLocation(lightShader.Program, "material.diffuse");
@@ -317,6 +327,9 @@ int main()
 		glUniform3f(matDiffuseLoc, 0.0f, 0.5f, 1.0f);
 		glUniform3f(matSpecularLoc, 0.8f, 0.8f, 0.8f);
 		glUniform1f(matShineLoc, 32.0f);
+		
+		glUniform1f(moveFactorLoc, waveFactor);
+
 
 		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
