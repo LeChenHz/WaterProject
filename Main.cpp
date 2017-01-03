@@ -24,6 +24,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void MoveCamera();
+GLuint loadTexture(GLchar* path);
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -41,19 +42,19 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 GLfloat radius = 2.0f;*/
 
 // attributes
-glm::vec3 lightPos(0.0f, 0.2f, 0.0f);
 glm::vec3 cameraPos(0.0f, 0.5f, 2.0f);
 
 
 
 // Camera
 Camera camera(cameraPos);
-bool keys[1024];
-GLfloat lastX = WIDTH/2, lastY = HEIGHT/2;
-bool firstMouse = true;
+//bool keys[1024];
+
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
+
+bool normalMapping = true;
 
 
 // The MAIN function, from here we start the application and run the game loop
@@ -91,11 +92,17 @@ int main()
 	glViewport(0, 0, WIDTH, HEIGHT);
 	glEnable(GL_DEPTH_TEST);
 
+	//environment parameters
+	glm::vec3 lightPos(0.0f, 1.0f, 0.0f);
 
 	// Build and compile our shader program
-	Shader waterShader("watershader.vertex", "watershader.fragment");
+	//Shader waterShader("watershader.vertex", "watershader.fragment");
 	Shader lightShader("lightshader.vertex", "lightshader.fragment");
 	Shader lampShader("lampshader.vertex", "lampshader.fragment");
+
+	// load textures
+	GLuint normalMap = loadTexture("textures/normalmap.jpg");
+	glUniform1i(glGetUniformLocation(lightShader.Program, "normalMap"), 0);
 
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
@@ -109,10 +116,10 @@ int main()
 
 	GLfloat waterVertices[] = {
 		// Positions          // normals           // Texture Coords
-		0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,   // Top Right
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   // Bottom Right
-		0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   // Bottom Left
-		-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f // Top Left 
+		0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f, // Top Right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,// Bottom left
+		0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,    1.0f, 0.0f,// Bottom right
+		-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,    0.0f, 1.0f// Top Left 
 	};
 
 
@@ -180,11 +187,15 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// Position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 	// Normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
+	//texture attribute 
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+
 	glBindVertexArray(0);
 
 	// Position attribute
@@ -289,15 +300,34 @@ int main()
 		glm::mat4 projection = glm::perspective(camera.Zoom, float(WIDTH) / float(HEIGHT), 0.1f, 100.0f);
 		glm::mat4 model;
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //rotate around x-axis
+		model = glm::scale(model, glm::vec3(2.0));
 
-		GLint objectColorLoc = glGetUniformLocation(lightShader.Program, "objectColor");
-		GLint lightColorLoc = glGetUniformLocation(lightShader.Program, "lightColor");
 		GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
 		GLint viewPosLoc = glGetUniformLocation(lightShader.Program, "viewPos");
-		glUniform3f(objectColorLoc, 0.0f, 0.5f, 1.0f);
-		glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+		glUniform1i(glGetUniformLocation(lightShader.Program, "normalMapping"), normalMapping);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, normalMap);
+
+		GLint matAmbientLoc = glGetUniformLocation(lightShader.Program, "material.ambient");
+		GLint matDiffuseLoc = glGetUniformLocation(lightShader.Program, "material.diffuse");
+		GLint matSpecularLoc = glGetUniformLocation(lightShader.Program, "material.specular");
+		GLint matShineLoc = glGetUniformLocation(lightShader.Program, "material.shininess");
+
+		glUniform3f(matAmbientLoc, 0.0f, 0.2f, 0.5f);
+		glUniform3f(matDiffuseLoc, 0.0f, 0.5f, 1.0f);
+		glUniform3f(matSpecularLoc, 0.8f, 0.8f, 0.8f);
+		glUniform1f(matShineLoc, 32.0f);
+
 		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+
+		GLint lightAmbientLoc = glGetUniformLocation(lightShader.Program, "light.ambient");
+		GLint lightDiffuseLoc = glGetUniformLocation(lightShader.Program, "light.diffuse");
+		GLint lightSpecularLoc = glGetUniformLocation(lightShader.Program, "light.specular");
+
+		glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
+		glUniform3f(lightDiffuseLoc, 0.8f, 0.8f, 0.8f); // Let's darken the light a bit to fit the scene
+		glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
 
 		// Get the uniform locations
 		GLint modelLoc = glGetUniformLocation(lightShader.Program, "model");
@@ -314,17 +344,18 @@ int main()
 		glBindVertexArray(0);
 
 
-
 		lampShader.Use();
+
+		model = glm::mat4(); //reset
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
+
 		modelLoc = glGetUniformLocation(lampShader.Program, "model");
 		viewLoc = glGetUniformLocation(lampShader.Program, "view");
 		projLoc = glGetUniformLocation(lampShader.Program, "projection");
 		// Set matrices
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		model = glm::mat4();
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		// Draw the light object (using light's vertex attributes)
 		glBindVertexArray(lightVAO);
@@ -385,7 +416,37 @@ int main()
 	return 0;
 }
 
+GLuint loadTexture(GLchar* path)
+{
+	//Generate texture ID and load texture data 
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	int width, height;
+	unsigned char* image = SOIL_load_image(path, &width, &height, 0, SOIL_LOAD_RGB);
+	// Assign texture to ID
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	SOIL_free_image_data(image);
+	return textureID;
+}
+
+
 // Moves/alters the camera positions based on user input
+
+#pragma region "User input"
+bool keys[1024];
+bool keysPressed[1024];
+bool firstMouse = true;
+GLfloat lastX = WIDTH / 2, lastY = HEIGHT / 2;
+
 void MoveCamera()
 {
 	// Camera controls
@@ -397,6 +458,13 @@ void MoveCamera()
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (keys[GLFW_KEY_D])
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+
+
+	if (keys[GLFW_KEY_SPACE] && !keysPressed[GLFW_KEY_SPACE])
+	{
+		normalMapping = !normalMapping;
+		keysPressed[GLFW_KEY_SPACE] = true;
+	}
 }
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
