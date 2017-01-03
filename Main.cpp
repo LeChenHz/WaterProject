@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 
 // GLEW
 #define GLEW_STATIC
@@ -16,22 +16,50 @@
 
 // Other includes
 #include "Shader.h"
-
-
+#include "Camera.h"
 
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void MoveCamera();
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 
+//camera
+/*GLfloat yaw = -90.0f;
+GLfloat pitch = 0.0f;
+GLfloat lastX = WIDTH / 2;
+GLfloat lastY = HEIGHT / 2;
 
+bool firstMouse = true;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 2.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+GLfloat radius = 2.0f;*/
+
+// attributes
+glm::vec3 lightPos(0.0f, 0.2f, 0.0f);
+glm::vec3 cameraPos(0.0f, 0.5f, 2.0f);
+
+
+
+// Camera
+Camera camera(cameraPos);
+bool keys[1024];
+GLfloat lastX = WIDTH/2, lastY = HEIGHT/2;
+bool firstMouse = true;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
 
 
 // The MAIN function, from here we start the application and run the game loop
 int main()
 {
+
 	// Init GLFW
 	glfwInit();
 	// Set all the required options for GLFW
@@ -44,9 +72,16 @@ int main()
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Water", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 
-	// Set the required callback functions
+	// Set the required callback functions and mouse capture
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+
+	//glEnable(GL_CULL_FACE);
+	//glCullFace​(GL_BACK);
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
 	// Initialize GLEW to setup the OpenGL Function pointers
@@ -54,52 +89,130 @@ int main()
 
 	// Define the viewport dimensions
 	glViewport(0, 0, WIDTH, HEIGHT);
+	glEnable(GL_DEPTH_TEST);
 
 
 	// Build and compile our shader program
 	Shader waterShader("watershader.vertex", "watershader.fragment");
+	Shader lightShader("lightshader.vertex", "lightshader.fragment");
+	Shader lampShader("lampshader.vertex", "lampshader.fragment");
+
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
-	GLfloat vertices[] = {
+	/*GLfloat waterVertices[] = {
 		// Positions          // Colors           // Texture Coords
 		0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // Top Right
 		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // Bottom Right
 		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // Bottom Left
 		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // Top Left 
+	};*/
+
+	GLfloat waterVertices[] = {
+		// Positions          // normals           // Texture Coords
+		0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,   // Top Right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   // Bottom Right
+		0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   // Bottom Left
+		-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f // Top Left 
 	};
+
+
 	GLuint indices[] = {  // Note that we start from 0!
-		0, 1, 3, // First Triangle
-		1, 2, 3  // Second Triangle
+		0, 1, 2, // First Triangle
+		0, 3, 1  // Second Triangle
 	};
 
+	GLfloat lightBoxVertices[] = {
+		-0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,
+		0.5f,  0.5f, -0.5f,
+		0.5f,  0.5f, -0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
 
-	GLuint VBO, VAO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
+		-0.5f, -0.5f,  0.5f,
+		0.5f, -0.5f,  0.5f,
+		0.5f,  0.5f,  0.5f,
+		0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+
+		0.5f,  0.5f,  0.5f,
+		0.5f,  0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f,  0.5f,
+		0.5f,  0.5f,  0.5f,
+
+		-0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f,  0.5f,
+		0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f,  0.5f, -0.5f,
+		0.5f,  0.5f, -0.5f,
+		0.5f,  0.5f,  0.5f,
+		0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f
+	};
+	
+
+	GLuint waterVBO, waterVAO, waterEBO;
+	glGenVertexArrays(1, &waterVAO);
+	glGenBuffers(1, &waterVBO);
+	glGenBuffers(1, &waterEBO);
 	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-	glBindVertexArray(VAO);
+	glBindVertexArray(waterVAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, waterVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(waterVertices), waterVertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, waterEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// Position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// Normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+	glBindVertexArray(0);
+
+	// Position attribute
+/*	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 	// Color attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 	//texture attribute
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);
-
+	glEnableVertexAttribArray(2);*/
 	glBindVertexArray(0); // Unbind VAO
 
+	GLuint lightVAO, lightVBO;
+	glGenVertexArrays(1, &lightVAO);
+	glGenBuffers(1, &lightVBO);
+
+	glBindVertexArray(lightVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(lightBoxVertices), lightBoxVertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+
 	//textures with soil
-	GLuint mirrorTex;
+/*	GLuint mirrorTex;
 	glGenTextures(1, &mirrorTex);  
 	glBindTexture(GL_TEXTURE_2D, mirrorTex);
 
@@ -132,61 +245,195 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// ------- //
+	*/
+
 
 
 	// rendering loop
 	while (!glfwWindowShouldClose(window))
 	{
+		// Set frame time
+		GLfloat currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
+		MoveCamera();
 
 		// Render
-		// Clear the colorbuffer
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		// Clear the buffers
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//animate light
+		//lightPos.x = sin(glfwGetTime()) * 0.5f ;
+		//lightPos.z = cos(glfwGetTime()) * 0.5f;
+		//lightPos.y = 1.0f + sin(glfwGetTime()/2);
 
 
 		//bind textures
-		glActiveTexture(GL_TEXTURE0);
+		/*glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mirrorTex);
 		glUniform1i(glGetUniformLocation(waterShader.Program, "mirrorTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, refractionTex);
 		glUniform1i(glGetUniformLocation(waterShader.Program, "refractionTex"), 1);
+		*/
+		//activate shaders
+		//waterShader.Use();
+		lightShader.Use();
+
+		glm::mat4 view;
+		view = camera.GetViewMatrix();
+		glm::mat4 projection = glm::perspective(camera.Zoom, float(WIDTH) / float(HEIGHT), 0.1f, 100.0f);
+		glm::mat4 model;
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //rotate around x-axis
+
+		GLint objectColorLoc = glGetUniformLocation(lightShader.Program, "objectColor");
+		GLint lightColorLoc = glGetUniformLocation(lightShader.Program, "lightColor");
+		GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
+		GLint viewPosLoc = glGetUniformLocation(lightShader.Program, "viewPos");
+		glUniform3f(objectColorLoc, 0.0f, 0.5f, 1.0f);
+		glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+		glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+
+		// Get the uniform locations
+		GLint modelLoc = glGetUniformLocation(lightShader.Program, "model");
+		GLint viewLoc = glGetUniformLocation(lightShader.Program, "view");
+		GLint projLoc = glGetUniformLocation(lightShader.Program, "projection");
+		// Pass the matrices to the shader
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+		glBindVertexArray(waterVAO);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+
+
+		lampShader.Use();
+		modelLoc = glGetUniformLocation(lampShader.Program, "model");
+		viewLoc = glGetUniformLocation(lampShader.Program, "view");
+		projLoc = glGetUniformLocation(lampShader.Program, "projection");
+		// Set matrices
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		model = glm::mat4();
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		// Draw the light object (using light's vertex attributes)
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		//matrices
+
+		/*GLfloat camX = sin(glfwGetTime()) * radius;
+		GLfloat camZ = cos(glfwGetTime()) * radius;
+		GLfloat camY = radius;*/
+
+		/***********************************************
+		glm::mat4 model, view;
+		model = glm::rotate(model, glm::radians(-70.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		view = glm::lookAt(glm::vec3(0.0, 0.0, 1.5), //position
+			glm::vec3(0.0, 0.0, 0.0), //target
+			glm::vec3(0.0, 1.0, 0.0));//up	// Note that we're translating the scene in the reverse direction of where we want to move
+		//get thier locations
+		GLint modelLoc = glGetUniformLocation(waterShader.Program, "model");
+		GLint viewLoc = glGetUniformLocation(waterShader.Program, "view");
 		
-		//ativate shader
-		waterShader.Use();
+
+		//pass them to shader
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 		//make transformation matrix
 		glm::mat4 transMat;
-		//transMat = glm::translate(transMat, glm::vec3(1.0f, 1.0f, 0.0f));
-		transMat = glm::rotate(transMat, glm::radians(-45.0f), glm::vec3(1.0, 0.0, 0.0));
-		transMat = glm::rotate(transMat, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+		//transMat = glm::rotate(transMat, (GLfloat)glfwGetTime()/4.0f * glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
 
-		GLuint transformLoc = glGetUniformLocation(waterShader.Program, "transformMat");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));
+		//GLuint transformLoc = glGetUniformLocation(waterShader.Program, "transformMat");
+		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));
 
 		// Draw the water
-		glBindVertexArray(VAO);
+		glBindVertexArray(waterVAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+*****************************************************/
+
 		glBindVertexArray(0);
+		glUseProgram(0);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 	}
 	// Properly de-allocate all resources once they've outlived their purpose
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
+	glDeleteVertexArrays(1, &waterVAO);
+	glDeleteBuffers(1, &waterVBO);
+	glDeleteBuffers(1, &waterEBO);
+
+	glDeleteVertexArrays(1, &lightVAO);
+	glDeleteBuffers(1, &lightVBO);
+
 
 	// Terminate GLFW, clearing any resources allocated by GLFW.
 	glfwTerminate();
 	return 0;
 }
 
+// Moves/alters the camera positions based on user input
+void MoveCamera()
+{
+	// Camera controls
+	if (keys[GLFW_KEY_W])
+		camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (keys[GLFW_KEY_S])
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (keys[GLFW_KEY_A])
+		camera.ProcessKeyboard(LEFT, deltaTime);
+	if (keys[GLFW_KEY_D])
+		camera.ProcessKeyboard(RIGHT, deltaTime);
+}
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
+	//cout << key << endl;
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (key >= 0 && key < 1024)
+	{
+		if (action == GLFW_PRESS)
+			keys[key] = true;
+		else if (action == GLFW_RELEASE)
+			keys[key] = false;
+	}
+
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	GLfloat xoffset = xpos - lastX;
+	GLfloat yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to left
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(yoffset/6);
 }

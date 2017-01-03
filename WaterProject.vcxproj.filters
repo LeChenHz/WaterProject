@@ -23,12 +23,27 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="watershader.vertex">
       <Filter>Source Files</Filter>
     </None>
     <None Include="watershader.fragment">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="lightshader.fragment">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="lightshader.vertex">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="lampshader.fragment">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="lampshader.vertex">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

@@ -119,9 +119,14 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="lampshader.fragment" />
+    <None Include="lampshader.vertex" />
+    <None Include="lightshader.fragment" />
+    <None Include="lightshader.vertex" />
     <None Include="watershader.fragment" />
     <None Include="watershader.vertex" />
   </ItemGroup>
