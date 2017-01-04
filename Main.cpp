@@ -80,7 +80,6 @@ int main()
 
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-
 	//glEnable(GL_CULL_FACE);
 	//glCullFace​(GL_BACK);
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
@@ -281,8 +280,8 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//animate light
-		lightPos.x = sin(glfwGetTime()) * 0.5f ;
-		lightPos.z = cos(glfwGetTime()) * 0.5f;
+		//lightPos.x = sin(glfwGetTime()) * 0.5f ;
+		//lightPos.z = cos(glfwGetTime()) * 0.5f;
 		//lightPos.y = 1.0f + sin(glfwGetTime()/2);
 
 		waveFactor += WAVE_SPEED * deltaTime;
@@ -308,7 +307,7 @@ int main()
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //rotate around x-axis
 		model = glm::scale(model, glm::vec3(2.0));
 
-		GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
+		//GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
 		GLint viewPosLoc = glGetUniformLocation(lightShader.Program, "viewPos");
 		
 		GLint moveFactorLoc = glGetUniformLocation(lightShader.Program, "moveFactor");
@@ -331,8 +330,10 @@ int main()
 		glUniform1f(moveFactorLoc, waveFactor);
 
 
-		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+		//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+
+		GLint lightPositionLoc = glGetUniformLocation(lightShader.Program, "light.position");
 
 		GLint lightAmbientLoc = glGetUniformLocation(lightShader.Program, "light.ambient");
 		GLint lightDiffuseLoc = glGetUniformLocation(lightShader.Program, "light.diffuse");
@@ -341,6 +342,9 @@ int main()
 		glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
 		glUniform3f(lightDiffuseLoc, 0.8f, 0.8f, 0.8f); // Let's darken the light a bit to fit the scene
 		glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
+		glUniform3f(lightPositionLoc, lightPos.x, lightPos.y, lightPos.z);
+
+
 
 		// Get the uniform locations
 		GLint modelLoc = glGetUniformLocation(lightShader.Program, "model");
@@ -472,12 +476,30 @@ void MoveCamera()
 	if (keys[GLFW_KEY_D])
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	if (keys[GLFW_KEY_SPACE] && !keysPressed[GLFW_KEY_SPACE])
 	{
-		normalMapping = !normalMapping;
+		normalMapping = false;
 		keysPressed[GLFW_KEY_SPACE] = true;
 	}
+	if (!keys[GLFW_KEY_SPACE] && keysPressed[GLFW_KEY_SPACE])// && !keysPressed[GLFW_KEY_SPACE])
+	{
+		normalMapping = true;
+		keysPressed[GLFW_KEY_SPACE] = false;
+	}
+
+	if (keys[GLFW_KEY_Z])
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	/*
+	if (keys[GLFW_KEY_SPACE] && keysPressed[GLFW_KEY_SPACE])
+	{
+		normalMapping = !normalMapping;
+		keysPressed[GLFW_KEY_SPACE] = false;
+	}*/
 }
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -488,7 +510,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
+		{
 			keys[key] = true;
+		}
 		else if (action == GLFW_RELEASE)
 			keys[key] = false;
 	}
