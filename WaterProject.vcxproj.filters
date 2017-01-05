@@ -46,5 +46,11 @@
     <None Include="lampshader.vertex">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="noiseshader.fragment">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="noiseshader.vertex">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

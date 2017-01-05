@@ -127,6 +127,8 @@
     <None Include="lampshader.vertex" />
     <None Include="lightshader.fragment" />
     <None Include="lightshader.vertex" />
+    <None Include="noiseshader.fragment" />
+    <None Include="noiseshader.vertex" />
     <None Include="watershader.fragment" />
     <None Include="watershader.vertex" />
   </ItemGroup>

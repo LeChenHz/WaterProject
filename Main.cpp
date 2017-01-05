@@ -11,7 +11,7 @@ http://www.learnopengl.com/
 ThinMatrix on YouTube for OpenGL water tutorial (specifically using DuDv-mapping and normal mapping).
 https://www.youtube.com/user/ThinMatrix/ 
 
-Stefan Gustafsson for being a great professor as well as created great sources to learn about simplex noise
+Stefan Gustavson for being a great professor as well as created great sources to learn about simplex noise
 http://staffwww.itn.liu.se/~stegu/simplexnoise/ 
 
 *********************************************************************/
@@ -116,7 +116,7 @@ int main()
 
 	// Build and compile our shader program
 	//Shader waterShader("watershader.vertex", "watershader.fragment");
-	Shader lightShader("lightshader.vertex", "lightshader.fragment");
+	Shader lightShader("noiseshader.vertex", "noiseshader.fragment");
 	Shader lampShader("lampshader.vertex", "lampshader.fragment");
 
 	// load textures
@@ -330,7 +330,6 @@ int main()
 		//GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
 		GLint viewPosLoc = glGetUniformLocation(lightShader.Program, "viewPos");
 		
-		GLint moveFactorLoc = glGetUniformLocation(lightShader.Program, "moveFactor");
 		glUniform1i(glGetUniformLocation(lightShader.Program, "normalMapping"), normalMapping);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, normalMap);
@@ -347,7 +346,10 @@ int main()
 		glUniform3f(matSpecularLoc, 0.6f, 0.6f, 0.6f);
 		glUniform1f(matShineLoc, 32.0f);
 		
+		GLint moveFactorLoc = glGetUniformLocation(lightShader.Program, "moveFactor");
 		glUniform1f(moveFactorLoc, waveFactor);
+		GLint timeLoc = glGetUniformLocation(lightShader.Program, "time");
+		glUniform1f(timeLoc, currentFrame);
 
 
 		//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
