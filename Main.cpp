@@ -1,4 +1,24 @@
-﻿#include <iostream>
+﻿/*******************************************************************
+//This code is created for learning purposes and for a university project
+Author: Lovisa Hassler
+Date: 2016
+
+Tutorials, sources and helpful links:
+
+Joey de Vries for getting started with OpenGL, assembling shaders, camera class, basic lighting etc.
+http://www.learnopengl.com/ 
+
+ThinMatrix on YouTube for OpenGL water tutorial (specifically using DuDv-mapping and normal mapping).
+https://www.youtube.com/user/ThinMatrix/ 
+
+Stefan Gustafsson for being a great professor as well as created great sources to learn about simplex noise
+http://staffwww.itn.liu.se/~stegu/simplexnoise/ 
+
+*********************************************************************/
+
+
+
+#include <iostream>
 
 // GLEW
 #define GLEW_STATIC
@@ -282,7 +302,7 @@ int main()
 		//animate light
 		//lightPos.x = sin(glfwGetTime()) * 0.5f ;
 		//lightPos.z = cos(glfwGetTime()) * 0.5f;
-		//lightPos.y = 1.0f + sin(glfwGetTime()/2);
+		//lightPos.y = 0.5f + sin(glfwGetTime()*2.0f)/2.0f;
 
 		waveFactor += WAVE_SPEED * deltaTime;
 		if (waveFactor >= 1.0)
@@ -322,9 +342,9 @@ int main()
 		GLint matSpecularLoc = glGetUniformLocation(lightShader.Program, "material.specular");
 		GLint matShineLoc = glGetUniformLocation(lightShader.Program, "material.shininess");
 
-		glUniform3f(matAmbientLoc, 0.0f, 0.2f, 0.5f);
-		glUniform3f(matDiffuseLoc, 0.0f, 0.5f, 1.0f);
-		glUniform3f(matSpecularLoc, 0.8f, 0.8f, 0.8f);
+		glUniform3f(matAmbientLoc, 0.0f, 0.5f, 0.8f);
+		glUniform3f(matDiffuseLoc, 0.0f, 0.5f, 0.8f);
+		glUniform3f(matSpecularLoc, 0.6f, 0.6f, 0.6f);
 		glUniform1f(matShineLoc, 32.0f);
 		
 		glUniform1f(moveFactorLoc, waveFactor);

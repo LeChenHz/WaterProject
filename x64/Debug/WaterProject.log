@@ -7,6 +7,5 @@ c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\m
 c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(534): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
 c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(535): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
 c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(543): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-cl : Command line warning D9028: minimal rebuild failure, reverting to normal build
   WaterProject.vcxproj -> C:\Users\CGLAB\Documents\Visual Studio 2015\Projects\WaterProject\x64\Debug\WaterProject.exe
   WaterProject.vcxproj -> C:\Users\CGLAB\Documents\Visual Studio 2015\Projects\WaterProject\x64\Debug\WaterProject.pdb (Partial PDB)
