@@ -6,6 +6,8 @@ layout (location = 2) in vec2 texCoords;
 
 out VS_OUT {
     vec3 FragPos;
+	vec3 TexCoords3d;
+
     vec3 Normal;
     vec2 TexCoords;
 	
@@ -15,10 +17,11 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-const float tiling = 1.0;
+const float tiling = 6.0;
 const float displaceamount = 0.1 ;// : range(0.2);
 uniform float time;
 uniform float moveFactor;
+const float waveSpeedFactor = 20.0f;
 
 
 
@@ -215,7 +218,7 @@ float snoise(vec3 v, out vec3 gradient)
   gradient += m4.x * p0 + m4.y * p1 + m4.z * p2 + m4.w * p3;
   gradient *= 42.0;
 
-  return 42.0 * dot(m4, pdotx);
+  return 42.0 * dot(m4, pdotx); // return noise scalar
 }
 
 
@@ -225,42 +228,37 @@ void main()
 	
 	vs_out.Normal = normal;
 	//vs_out.TexCoords = texCoords;
-	//vs_out.TexCoords = vec2(texCoords.x/2.0 + 0.5, texCoords.y/2.0 + 0.5) * tiling;
-	vs_out.TexCoords = vec2(texCoords.x, texCoords.y) ;
+	vs_out.TexCoords = vec2(texCoords.x/2.0 + 0.5, texCoords.y/2.0 + 0.5) * tiling;
+	//vs_out.TexCoords = vec2(texCoords.x, texCoords.y) ;
+	
+	vs_out.FragPos = vec3(model * vec4(position, 1.0));
 
-
-
-	// Acquire vertex coordinate, texture coordinate, and normal vector
-    //vec3 coord = sphereCoord<MERIDIANS, PARALLELS>(index);
-    //f.texCoord2 = sphereTexCoord<MERIDIANS, PARALLELS>(index);
-   // f.normal = sphereNormal<MERIDIANS, PARALLELS>(index);
+	vs_out.TexCoords3d = position;
 
 	// Displace surface
 	vec3 grad = vec3(0.0); // To store gradient of noise
-	float bump = snoise(position*2.0 + vec3(0.2, 0.13 , 0.33 + moveFactor * 6.0), grad); //*time multiply
-	grad *= 2.0; // Scale gradient with inner derivative
+	float bump = snoise(vs_out.TexCoords3d*4.0 + vec3(0.2 , 0.13, 0.33), grad); 
+	grad *= 4.0; // Scale gradient with inner derivative
     
-	vs_out.FragPos = position; // Undisplaced, untransformed position
+	//vs_out.FragPos = position; // Undisplaced, untransformed position
 	//f.texCoord3 = position; // Undisplaced, untransformed position
-	vs_out.FragPos += displaceamount * bump * vs_out.Normal;
     //f.texCoord3 = position; // Displaced but untransformed position
 	 
-    // Transform coordinate
-   // position = rotateZ(position, -rotation_phi);
-   // position = rotateX(position, rotation_theta);
-   // position = translate(position, vec3(0.0, 0.0, -distance));
-   vs_out.FragPos = vec3(model * vec4(vs_out.FragPos, 1.0));
+
+   vs_out.TexCoords3d = vec3(model * vec4(vs_out.TexCoords3d, 1.0));
 
 	// Perturb normal
 	vec3 perturbation = grad - dot(grad, vs_out.Normal) * vs_out.Normal;
 	vs_out.Normal -= displaceamount * perturbation;
 	vs_out.Normal = normalize(vs_out.Normal);
-
-	gl_Position = projection * view * model * vec4(position, 1.0f);
-    //vs_out.TexCoords = vec2(texCoords.x/2.0 + 0.5, texCoords.y/2.0 + 0.5) * tiling;
     
     mat3 normalMatrix = transpose(inverse(mat3(model)));
     vs_out.Normal = normalMatrix * vs_out.Normal;
+	vs_out.TexCoords3d.xy += displaceamount * bump * vs_out.Normal.xy;
+	vs_out.TexCoords3d.xy += time/waveSpeedFactor;
+
+		gl_Position = projection * view * model * vec4(position, 1.0f);
+
 
 
 } 

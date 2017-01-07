@@ -3,8 +3,11 @@ out vec4 color;
 
 in VS_OUT {
     vec3 FragPos;
+	vec3 TexCoords3d;
+
     vec3 Normal;
     vec2 TexCoords;
+
 } fs_in;
 
 struct Material {
@@ -236,11 +239,16 @@ float snoise(vec3 v, out vec3 gradient)
 
 void main()
 {
+
+
+	vec3 pattern = vec3(0.0);
 	vec3 normal = normalize(fs_in.Normal);
 	//vec2 distortion = (texture(dudvMap, fs_in.TexCoords +vec2(moveFactor, moveFactor * 2.0)).rg * 2.0 - 1.0) * waveStrength;
-	if(normalMapping)
-	{
-		
+	if(!normalMapping)
+	{   
+		float noiseScale1 = 4.0;
+		float noiseScale2 = 8.0;
+		float noiseScale3 = 16.0;
 		//vec2 newTexCoords = fs_in.TexCoords + distortion;
 
 	    //// Obtain normal from normal map in range [0,1]
@@ -253,14 +261,17 @@ void main()
 		// Bump map surface
 		vec3 grad = vec3(0.0); // To store gradient of noise
 		vec3 gradtemp = vec3(0.0); // Temporary gradient for fractal sum
-		float bump = snoise(fs_in.FragPos*10.0, grad);
-		grad *= 10.0; // Scale gradient with inner derivative (texcoord scale)
-		bump += 0.5 * snoise(fs_in.FragPos*20.0, gradtemp);
-		grad += 10.0 * gradtemp; // Same influence (double freq, half amp)
-		bump += 0.25 * snoise(fs_in.FragPos*40.0, gradtemp);
-		grad += 10.0 * gradtemp; // Same influence (double freq, half amp)
+		float bump = 0.5 + snoise(fs_in.TexCoords3d*noiseScale1, grad);
+		grad *= noiseScale1; // Scale gradient with inner derivative (texcoord scale)
+		bump += 0.5 * snoise(fs_in.TexCoords3d * noiseScale2, gradtemp);
+		grad += noiseScale2 * gradtemp; // Same influence (double freq, half amp)
+		bump += 0.25 * snoise(fs_in.TexCoords3d*noiseScale3, gradtemp);
+		grad += noiseScale3 * gradtemp; // Same influence (double freq, half amp)
 
-		vec3 pattern = vec3(0.5+0.5*bump); // Re-use bump value for surface color
+		//pattern = vec3(0.0+0.5*bump); // Re-use bump value for surface color
+		//pattern.x *= 0.5;
+		//pattern.x *= 0.5;
+
 
 		bump *= 0.2; // Bump noise starts at 1/5 the size of displacement noise
 		grad *= 0.2; // and should be scaled to 1/5 the height as well
@@ -268,6 +279,7 @@ void main()
 		// Perturb normal
 		vec3 perturbation = grad - dot(grad, normal) * normal;
 		normal -= bumpamount * perturbation;
+		//normal = normal * vec3(pattern.x * 2 -1, pattern.y, pattern.z * 2 -1);
 		normal = normalize(normal);
 	
 		// Transform normal
@@ -279,13 +291,21 @@ void main()
 		//float lightD = mix(phongD, 1.0, lightA);
 		//float lightS = max(0.0, -normalize(reflect(lightDirection, f.normal)).z);
 		//lightS = pow(lightS, 16.0);
-		//vec3 fragColor = lightD * pattern + lightS * vec3(1.0, 1.0, 1.0);
-	   // return vec4(fragColor, 1.0);
+		//vec3 fragColor = lightD + lightS * vec3(1.0, 1.0, 1.0);
+	    //return vec4(fragColor, 1.0);
+	}
 
+	if(normalMapping)
+	{
+		const float waveHeight = 1.1;
+		vec2 distortion = (texture(dudvMap, fs_in.TexCoords +vec2(moveFactor, moveFactor * 2.0)).rg * 2.0 - 1.0) * waveStrength;
+		vec2 newTexCoords = fs_in.TexCoords + distortion;
 
-
-
-
+	    // Obtain normal from normal map in range [0,1]
+        vec4 normalMapColor = texture(normalMap, newTexCoords);
+        // Transform normal vector to range [-1,1]
+        normal = vec3(normalMapColor.r *2.0 - 1.0, normalMapColor.b /waveHeight , normalMapColor.g *2.0 -1.0); // make range -1 to 1, except y-value that we still want in range 0 to 1  
+		normal = normalize(normal);
 	}
 
     // Ambient

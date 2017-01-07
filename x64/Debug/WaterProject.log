@@ -1,11 +1,11 @@
 ﻿  Main.cpp
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(289): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(548): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(549): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(553): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(554): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(556): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(557): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(565): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(290): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(550): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(551): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(555): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(556): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(558): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(559): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cglab\documents\visual studio 2015\projects\waterproject\waterproject\main.cpp(567): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
   WaterProject.vcxproj -> C:\Users\CGLAB\Documents\Visual Studio 2015\Projects\WaterProject\x64\Debug\WaterProject.exe
   WaterProject.vcxproj -> C:\Users\CGLAB\Documents\Visual Studio 2015\Projects\WaterProject\x64\Debug\WaterProject.pdb (Partial PDB)

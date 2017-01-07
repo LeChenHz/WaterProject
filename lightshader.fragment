@@ -33,28 +33,29 @@ uniform sampler2D dudvMap;
 uniform vec3 viewPos;
 uniform bool normalMapping;
 
-const float waveStrength = 0.04;
+const float waveStrength = 0.03;
+const float waveHeight = 1.1;
+
 uniform float moveFactor;
 
 
 void main()
 {
 	vec3 normal = normalize(fs_in.Normal);
-	vec2 distortion = (texture(dudvMap, fs_in.TexCoords +vec2(moveFactor, moveFactor * 2.0)).rg * 2.0 - 1.0) * waveStrength;
 	if(normalMapping)
 	{
-		
-		//vec2 newTexCoords = fs_in.TexCoords + distortion;
+		vec2 distortion = (texture(dudvMap, fs_in.TexCoords +vec2(moveFactor, moveFactor * 2.0)).rg * 2.0 - 1.0) * waveStrength;
+		vec2 newTexCoords = fs_in.TexCoords + distortion;
 
-	    //// Obtain normal from normal map in range [0,1]
-        //vec4 normalMapColor = texture(normalMap, newTexCoords);
-        //// Transform normal vector to range [-1,1]
-        //normal = vec3(normalMapColor.r *2.0 - 1.0, normalMapColor.b, normalMapColor.g *2.0 -1.0);   
-		//normal = normalize(normal);
-
-
+	    // Obtain normal from normal map in range [0,1]
+        vec4 normalMapColor = texture(normalMap, newTexCoords);
+        // Transform normal vector to range [-1,1]
+        normal = vec3(normalMapColor.r *2.0 - 1.0, normalMapColor.b /waveHeight , normalMapColor.g *2.0 -1.0); // make range -1 to 1, except y-value that we still want in range 0 to 1  
+		normal = normalize(normal);
 
 	}
+
+
 
     // Ambient
     vec3 ambient = light.ambient * material.ambient;

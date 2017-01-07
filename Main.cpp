@@ -62,7 +62,7 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 GLfloat radius = 2.0f;*/
 
 // attributes
-glm::vec3 cameraPos(0.0f, 0.5f, 2.0f);
+glm::vec3 cameraPos(0.3f, 0.8f, 2.0f);
 
 
 
@@ -112,10 +112,11 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	//environment parameters
-	glm::vec3 lightPos(0.0f, 1.0f, 0.0f);
+	glm::vec3 lightPos(0.3f, 1.0f, 0.0f);
 
 	// Build and compile our shader program
 	//Shader waterShader("watershader.vertex", "watershader.fragment");
+	//Shader lightShader("lightshader.vertex", "lightshader.fragment");
 	Shader lightShader("noiseshader.vertex", "noiseshader.fragment");
 	Shader lampShader("lampshader.vertex", "lampshader.fragment");
 
@@ -324,6 +325,7 @@ int main()
 		view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(camera.Zoom, float(WIDTH) / float(HEIGHT), 0.1f, 100.0f);
 		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(0.3f, 0.0f, -0.5f)); //rotate around x-axis
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //rotate around x-axis
 		model = glm::scale(model, glm::vec3(2.0));
 
