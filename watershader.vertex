@@ -221,11 +221,11 @@ float snoise(vec3 v, out vec3 gradient)
 
 void main()
 {
-	vs_out.Normal = normal;
+	//vs_out.Normal = normal;
 	vs_out.TexCoords = vec2(texCoords.x/2.0 + 0.5, texCoords.y/2.0 + 0.5) * tiling; //range
 	
 	vs_out.FragPos = vec3(model * vec4(position, 1.0));
-	vs_out.TexCoords3d = position;
+	vs_out.TexCoords3d = vec3(texCoords.x,texCoords.y, 1.0);//position;
 
 	// Displace surface
 	vec3 grad = vec3(0.0); // To store gradient of noise
@@ -235,9 +235,9 @@ void main()
     vs_out.TexCoords3d = vec3(model * vec4(vs_out.TexCoords3d, 1.0));
 
 	// Perturb normal
-	vec3 perturbation = grad - dot(grad, vs_out.Normal) * vs_out.Normal;
-	vs_out.Normal -= displaceamount * perturbation;
-	vs_out.Normal = normalize(vs_out.Normal);
+	//vec3 perturbation = grad - dot(grad, vs_out.Normal) * vs_out.Normal;
+	//vs_out.Normal -= displaceamount * perturbation;
+	vs_out.Normal = normalize(normal);
     
     mat3 normalMatrix = transpose(inverse(mat3(model)));
     vs_out.Normal = normalMatrix * vs_out.Normal;

@@ -221,8 +221,8 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//animate light
-		//lightPos.x = sin(glfwGetTime()) * 0.5f ;
-		//lightPos.z = cos(glfwGetTime()) * 0.5f;
+		lightPos.x = sin(glfwGetTime()) * 0.5f ;
+		lightPos.z = -0.5 + cos(glfwGetTime()) * 0.7f;
 		//lightPos.y = 0.5f + sin(glfwGetTime()*2.0f)/2.0f;
 
 		//variables used for the normalmapping shading
