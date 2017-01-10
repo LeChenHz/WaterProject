@@ -11,7 +11,7 @@ http://www.learnopengl.com/
 ThinMatrix on YouTube for OpenGL water tutorial (specifically using DuDv-mapping and normal mapping).
 https://www.youtube.com/user/ThinMatrix/ 
 
-Stefan Gustafsson for being a great professor as well as created great sources to learn about simplex noise
+Stefan Gustavson for being a great professor as well as created great sources to learn about simplex noise
 http://staffwww.itn.liu.se/~stegu/simplexnoise/ 
 
 *********************************************************************/
@@ -49,38 +49,20 @@ GLuint loadTexture(GLchar* path);
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 
-//camera
-/*GLfloat yaw = -90.0f;
-GLfloat pitch = 0.0f;
-GLfloat lastX = WIDTH / 2;
-GLfloat lastY = HEIGHT / 2;
-
-bool firstMouse = true;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 2.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-GLfloat radius = 2.0f;*/
-
-// attributes
-glm::vec3 cameraPos(0.0f, 0.5f, 2.0f);
-
-
-
 // Camera
+glm::vec3 cameraPos(0.3f, 0.8f, 2.0f);
 Camera camera(cameraPos);
-//bool keys[1024];
-
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
+//mode swapping bool
 bool normalMapping = true;
 
 
 // The MAIN function, from here we start the application and run the game loop
 int main()
 {
-
 	// Init GLFW
 	glfwInit();
 	// Set all the required options for GLFW
@@ -97,11 +79,9 @@ int main()
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	//glEnable(GL_CULL_FACE);
-	//glCullFace​(GL_BACK);
+	glEnable(GL_CULL_FACE);
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
 	// Initialize GLEW to setup the OpenGL Function pointers
@@ -112,29 +92,20 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	//environment parameters
-	glm::vec3 lightPos(0.0f, 1.0f, 0.0f);
+	glm::vec3 lightPos(0.3f, 1.0f, 0.0f);
 
 	// Build and compile our shader program
-	//Shader waterShader("watershader.vertex", "watershader.fragment");
-	Shader lightShader("lightshader.vertex", "lightshader.fragment");
+	Shader waterShader("watershader.vertex", "watershader.fragment");
 	Shader lampShader("lampshader.vertex", "lampshader.fragment");
 
-	// load textures
+	// load textures for mapping
 	GLuint normalMap = loadTexture("textures/normalmap2.png");
-	glUniform1i(glGetUniformLocation(lightShader.Program, "normalMap"), 0);
+	glUniform1i(glGetUniformLocation(waterShader.Program, "normalMap"), 0);
 	GLuint dudvMap = loadTexture("textures/dudv.png");
-	glUniform1i(glGetUniformLocation(lightShader.Program, "dudvMap"), 1);
+	glUniform1i(glGetUniformLocation(waterShader.Program, "dudvMap"), 1);
 
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
-	/*GLfloat waterVertices[] = {
-		// Positions          // Colors           // Texture Coords
-		0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // Top Right
-		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // Bottom Right
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // Bottom Left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // Top Left 
-	};*/
-
 	GLfloat waterVertices[] = {
 		// Positions          // normals           // Texture Coords
 		0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f, // Top Right
@@ -143,54 +114,48 @@ int main()
 		-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,    0.0f, 1.0f// Top Left 
 	};
 
-
 	GLuint indices[] = {  // Note that we start from 0!
 		0, 1, 2, // First Triangle
 		0, 3, 1  // Second Triangle
 	};
 
 	GLfloat lightBoxVertices[] = {
-		-0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f, -0.5f,
-		0.5f,  0.5f, -0.5f,
-		0.5f,  0.5f, -0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-
-		-0.5f, -0.5f,  0.5f,
-		0.5f, -0.5f,  0.5f,
-		0.5f,  0.5f,  0.5f,
-		0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-
-		0.5f,  0.5f,  0.5f,
-		0.5f,  0.5f, -0.5f,
-		0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f,  0.5f,
-		0.5f,  0.5f,  0.5f,
-
-		-0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f,  0.5f,
-		0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f, -0.5f,
-
-		-0.5f,  0.5f, -0.5f,
-		0.5f,  0.5f, -0.5f,
-		0.5f,  0.5f,  0.5f,
-		0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f
+		-1.0f,-1.0f,-1.0f, // triangle 1 : begin
+		-1.0f,-1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f, // triangle 1 : end
+		1.0f, 1.0f,-1.0f, // triangle 2 : begin
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f, // triangle 2 : end
+		1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f
 	};
 	
 
@@ -213,21 +178,12 @@ int main()
 	// Normal attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-	//texture attribute 
+	//texture coordinate attribute 
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 
-	// Position attribute
-/*	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	// Color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-	//texture attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);*/
 	glBindVertexArray(0); // Unbind VAO
 
 	GLuint lightVAO, lightVBO;
@@ -243,41 +199,6 @@ int main()
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 
-	//textures with soil
-/*	GLuint mirrorTex;
-	glGenTextures(1, &mirrorTex);  
-	glBindTexture(GL_TEXTURE_2D, mirrorTex);
-
-	// Set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	int width, height;
-	unsigned char* image = SOIL_load_image("textures/sky.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	//-------//
-
-	GLuint refractionTex;
-	glGenTextures(1, &refractionTex);
-	glBindTexture(GL_TEXTURE_2D, refractionTex);
-
-	// Set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	image = SOIL_load_image("textures/bottom.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// ------- //
-	*/
 	float waveFactor = 0.0f;
 	const float WAVE_SPEED = 0.03f;
 
@@ -300,64 +221,60 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//animate light
-		//lightPos.x = sin(glfwGetTime()) * 0.5f ;
-		//lightPos.z = cos(glfwGetTime()) * 0.5f;
+		lightPos.x = sin(glfwGetTime()) * 0.5f ;
+		lightPos.z = -0.5 + cos(glfwGetTime()) * 0.7f;
 		//lightPos.y = 0.5f + sin(glfwGetTime()*2.0f)/2.0f;
 
+		//variables used for the normalmapping shading
 		waveFactor += WAVE_SPEED * deltaTime;
 		if (waveFactor >= 1.0)
 			waveFactor = 0.0f;
 
-		//bind textures
-		/*glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mirrorTex);
-		glUniform1i(glGetUniformLocation(waterShader.Program, "mirrorTex"), 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, refractionTex);
-		glUniform1i(glGetUniformLocation(waterShader.Program, "refractionTex"), 1);
-		*/
-		//activate shaders
-		//waterShader.Use();
-		lightShader.Use();
+
+		//activate watershader
+		waterShader.Use();
 
 		glm::mat4 view;
 		view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(camera.Zoom, float(WIDTH) / float(HEIGHT), 0.1f, 100.0f);
 		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(0.3f, 0.0f, -0.5f)); //translate from origin for noise to work better
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //rotate around x-axis
 		model = glm::scale(model, glm::vec3(2.0));
-
-		//GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
-		GLint viewPosLoc = glGetUniformLocation(lightShader.Program, "viewPos");
 		
-		GLint moveFactorLoc = glGetUniformLocation(lightShader.Program, "moveFactor");
-		glUniform1i(glGetUniformLocation(lightShader.Program, "normalMapping"), normalMapping);
+		//GLint lightPosLoc = glGetUniformLocation(lightShader.Program, "lightPos");
+		GLint viewPosLoc = glGetUniformLocation(waterShader.Program, "viewPos");
+		
+		glUniform1i(glGetUniformLocation(waterShader.Program, "normalMapping"), normalMapping);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, normalMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, dudvMap);
 
-		GLint matAmbientLoc = glGetUniformLocation(lightShader.Program, "material.ambient");
-		GLint matDiffuseLoc = glGetUniformLocation(lightShader.Program, "material.diffuse");
-		GLint matSpecularLoc = glGetUniformLocation(lightShader.Program, "material.specular");
-		GLint matShineLoc = glGetUniformLocation(lightShader.Program, "material.shininess");
+		GLint matAmbientLoc = glGetUniformLocation(waterShader.Program, "material.ambient");
+		GLint matDiffuseLoc = glGetUniformLocation(waterShader.Program, "material.diffuse");
+		GLint matSpecularLoc = glGetUniformLocation(waterShader.Program, "material.specular");
+		GLint matShineLoc = glGetUniformLocation(waterShader.Program, "material.shininess");
 
 		glUniform3f(matAmbientLoc, 0.0f, 0.5f, 0.8f);
 		glUniform3f(matDiffuseLoc, 0.0f, 0.5f, 0.8f);
 		glUniform3f(matSpecularLoc, 0.6f, 0.6f, 0.6f);
-		glUniform1f(matShineLoc, 32.0f);
+		glUniform1f(matShineLoc, 10.0f);
 		
+		GLint moveFactorLoc = glGetUniformLocation(waterShader.Program, "moveFactor");
 		glUniform1f(moveFactorLoc, waveFactor);
+		GLint timeLoc = glGetUniformLocation(waterShader.Program, "time");
+		glUniform1f(timeLoc, currentFrame);
 
 
 		//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 
-		GLint lightPositionLoc = glGetUniformLocation(lightShader.Program, "light.position");
+		GLint lightPositionLoc = glGetUniformLocation(waterShader.Program, "light.position");
 
-		GLint lightAmbientLoc = glGetUniformLocation(lightShader.Program, "light.ambient");
-		GLint lightDiffuseLoc = glGetUniformLocation(lightShader.Program, "light.diffuse");
-		GLint lightSpecularLoc = glGetUniformLocation(lightShader.Program, "light.specular");
+		GLint lightAmbientLoc = glGetUniformLocation(waterShader.Program, "light.ambient");
+		GLint lightDiffuseLoc = glGetUniformLocation(waterShader.Program, "light.diffuse");
+		GLint lightSpecularLoc = glGetUniformLocation(waterShader.Program, "light.specular");
 
 		glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
 		glUniform3f(lightDiffuseLoc, 0.8f, 0.8f, 0.8f); // Let's darken the light a bit to fit the scene
@@ -367,9 +284,9 @@ int main()
 
 
 		// Get the uniform locations
-		GLint modelLoc = glGetUniformLocation(lightShader.Program, "model");
-		GLint viewLoc = glGetUniformLocation(lightShader.Program, "view");
-		GLint projLoc = glGetUniformLocation(lightShader.Program, "projection");
+		GLint modelLoc = glGetUniformLocation(waterShader.Program, "model");
+		GLint viewLoc = glGetUniformLocation(waterShader.Program, "view");
+		GLint projLoc = glGetUniformLocation(waterShader.Program, "projection");
 		// Pass the matrices to the shader
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -385,7 +302,7 @@ int main()
 
 		model = glm::mat4(); //reset
 		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
+		model = glm::scale(model, glm::vec3(0.05f)); // Make it a smaller cube
 
 		modelLoc = glGetUniformLocation(lampShader.Program, "model");
 		viewLoc = glGetUniformLocation(lampShader.Program, "view");
@@ -398,42 +315,7 @@ int main()
 		glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-
-		//matrices
-
-		/*GLfloat camX = sin(glfwGetTime()) * radius;
-		GLfloat camZ = cos(glfwGetTime()) * radius;
-		GLfloat camY = radius;*/
-
-		/***********************************************
-		glm::mat4 model, view;
-		model = glm::rotate(model, glm::radians(-70.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::lookAt(glm::vec3(0.0, 0.0, 1.5), //position
-			glm::vec3(0.0, 0.0, 0.0), //target
-			glm::vec3(0.0, 1.0, 0.0));//up	// Note that we're translating the scene in the reverse direction of where we want to move
-		//get thier locations
-		GLint modelLoc = glGetUniformLocation(waterShader.Program, "model");
-		GLint viewLoc = glGetUniformLocation(waterShader.Program, "view");
-		
-
-		//pass them to shader
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-		//make transformation matrix
-		glm::mat4 transMat;
-		//transMat = glm::rotate(transMat, (GLfloat)glfwGetTime()/4.0f * glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-
-		//GLuint transformLoc = glGetUniformLocation(waterShader.Program, "transformMat");
-		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));
-
-		// Draw the water
-		glBindVertexArray(waterVAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-*****************************************************/
-
-		glBindVertexArray(0);
+		glBindVertexArray(0); // unbind
 		glUseProgram(0);
 
 		// Swap the screen buffers
