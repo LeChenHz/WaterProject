@@ -41,7 +41,6 @@ uniform float moveFactor;
 const float bumpamount = 0.1 ; //: range(0.2);
 
 
-
 //
 // Description : Array- and textureless GLSL 3-D simplex noise
 //               function with optional analytic gradient.
